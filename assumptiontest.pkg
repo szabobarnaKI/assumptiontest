@@ -1,0 +1,24 @@
+v 3
+d Automatic model assumption tests after stcox, streg and nbreg
+d The assumptiontest command runs and evaluates model assumption tests after stcox, streg (exponential and Weibull) and nbreg, lists the assumptions that cannot be tested, and returns all results in r(); the estimation results and e(sample) are preserved.
+d 
+d Program by Barna Szabó-Söderberg
+d Distribution-Date: 2026.11.03
+f assumptiontest.ado
+f assumptiontest.sthlp
+f _atest_dfbeta.ado
+f _atest_gb.ado
+f _atest_infl.ado
+f _atest_ld.ado
+f _atest_linear.ado
+f _atest_nbreg.ado
+f _atest_phtest.ado
+f _atest_post.ado
+f _atest_refit.ado
+f _atest_restore.ado
+f _atest_splinfo.ado
+f _atest_stcox.ado
+f _atest_streg.ado
+f _atest_terms.ado
+f _atest_wald.ado
+e
