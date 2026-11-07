@@ -1,4 +1,5 @@
-*! assumptiontest 0.3.0  model-assumption tests after stcox, streg and nbreg
+*! assumptiontest 0.4.0  model-assumption tests after stcox, streg, nbreg,
+*! poisson, regress, logit, logistic and firthlogit
 *! Checks the model type of the last estimation, runs the relevant automatic
 *! assumption tests, lists untestable assumptions, returns all results in r(),
 *! preserves the estimation results (including e(sample)), and stops with an
@@ -71,6 +72,7 @@ program define _atest_main, rclass
 
     syntax [, CONTinue ALpha(real 0.05) GRAPHPath(string) NOOUTliers ///
         OUTcut(real 1) RESCut(real 3) INFLuence(string) LDcut(real -1) COOKcut(real 1) ///
+        VIFcut(real 10) EPVcut(real 10) ///
         LINearity(string) CRITical(string) NONCRITical(string) * ]
 
     * ---- an estimation must be active
@@ -90,7 +92,8 @@ program define _atest_main, rclass
     capture quietly findfile _atest_`cmd'.ado
     if _rc {
         display as error "assumptiontest does not cover estimation command {bf:`cmd'}"
-        display as error "covered: stcox, streg, nbreg (see {help assumptiontest##extend:Extending assumptiontest})"
+        display as error "covered: stcox, streg, nbreg, poisson, regress, logit, logistic, firthlogit"
+        display as error "(see {help assumptiontest##extend:Extending assumptiontest})"
         exit 199
     }
     if "`influence'" == "" local influence ld
@@ -105,6 +108,10 @@ program define _atest_main, rclass
     }
     if `alpha' <= 0 | `alpha' >= 1 {
         display as error "alpha() must be between 0 and 1"
+        exit 198
+    }
+    if `vifcut' <= 0 | `epvcut' <= 0 {
+        display as error "vifcut() and epvcut() must be positive"
         exit 198
     }
 
@@ -171,6 +178,8 @@ program define _atest_main, rclass
     global ATEST_infl      `influence'
     global ATEST_ldcut     `ldcut'
     global ATEST_cookcut   `cookcut'
+    global ATEST_vifcut    `vifcut'
+    global ATEST_epvcut    `epvcut'
     global ATEST_lin       `linearity'
     global ATEST_graphpath `"`graphpath'"'
     global ATEST_crit      `critical'
@@ -201,11 +210,13 @@ program define _atest_main, rclass
     if `"`title'"' == "" local title "`cmd'"
     local alphatxt = strtrim(string(`alpha', "%9.0g"))
     if substr("`alphatxt'", 1, 1) == "." local alphatxt "0`alphatxt'"
+    local infltxt ""
+    if inlist("`cmd'", "stcox", "streg") local infltxt ";  influence: `influence'"
     display
     display as text "{hline 78}"
     display as text "assumptiontest: " as result `"`title'"' as text "  (`cmd')"
     display as text "  Estimation sample: " as result `Nsample' as text " observations;" ///
-        as text "  alpha = " as result "`alphatxt'" as text ";  influence: " as result "`influence'" ///
+        as text "  alpha = " as result "`alphatxt'" as text "`infltxt'" ///
         as text ";  linearity: " as result "`linearity'"
     local contdisp "$ATEST_cont"
     local catdisp  "$ATEST_cat"

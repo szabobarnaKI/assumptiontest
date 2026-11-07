@@ -1,4 +1,4 @@
-*! _atest_terms 0.1.0  classify the terms of the last estimation
+*! _atest_terms 0.1.1  classify the terms of the last estimation
 *! Internal helper of assumptiontest. Reads the column names of e(b) (first
 *! equation only). Returns
 *!   r(cont) plain continuous variables (not categorical, not spline)
@@ -6,6 +6,8 @@
 *!   r(spl)  variables belonging to a spline() group (as declared by the user)
 *!   r(inter) 1 if interaction terms are present
 *!   r(terms) design terms of the first equation (base/omitted levels removed)
+*! Variables omitted by the estimation command (o.var, co.var: collinear or
+*! perfect predictors) are not model terms and are left out of all lists.
 *! Spline groups declared by the user are in globals ATEST_nsp, ATEST_sp1 ...
 program define _atest_terms, rclass
     version 17
@@ -26,6 +28,14 @@ program define _atest_terms, rclass
         local q : word `j' of `ce'
         if "`q'" != "`eq1'" continue
         if "`t'" == "_cons" continue
+        * omitted variable (o.w, co.w; no level number): not part of the model
+        if strpos("`t'", "#") == 0 {
+            local d0 = strpos("`t'", ".")
+            if `d0' > 0 {
+                local pre0 = substr("`t'", 1, `d0' - 1)
+                if ustrregexm("`pre0'", "^[a-z]*o[a-z]*$") continue
+            }
+        }
         * design columns for influence calculations: skip base/omitted levels
         if !ustrregexm("`t'", "[0-9]+[bo]\.") local terms `terms' `t'
         if strpos("`t'", "#") > 0 {

@@ -1,6 +1,6 @@
 v 3
-d Automatic model assumption tests after stcox, streg and nbreg
-d The assumptiontest command runs and evaluates model assumption tests after stcox, streg (exponential and Weibull) and nbreg, lists the assumptions that cannot be tested, and returns all results in r(); the estimation results and e(sample) are preserved.
+d Automatic model assumption tests after stcox, streg, nbreg, poisson, regress, logit, logistic and firthlogit
+d The assumptiontest command runs and evaluates model assumption tests after stcox, streg (exponential and Weibull), nbreg, poisson, regress, logit, logistic and firthlogit (SSC), lists the assumptions that cannot be tested, and returns all results in r(); the estimation results and e(sample) are preserved.
 d 
 d Program by Barna Szabó-Söderberg
-p assumptiontest Model assumption tests after stcox, streg and nbreg.
+p assumptiontest Model assumption tests after stcox, streg, nbreg, poisson, regress, logit, logistic and firthlogit.

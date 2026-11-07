@@ -1,9 +1,12 @@
-*! _atest_refit 0.2.0  re-run the last estimation command in a modified form
+*! _atest_refit 0.3.0  re-run the last estimation command in a modified form
 *! Internal helper of assumptiontest. Splits e(cmdline) into its parts
 *! (varlist, weight, if/in, options), optionally removes options, adds
 *! extra covariates / options, switches the command, and runs it quietly.
 *! Options with arguments are removed with balanced parentheses, so nested
 *! arguments such as texp(ln(_t)) or vce(cluster id) are removed completely.
+*! Commands that do not store e(cmdline) (some community-contributed ones):
+*! the command line is rebuilt from e(cmd), e(depvar), the terms of the first
+*! equation of e(b), the weights, and  if <estimation sample>.
 *! Returns r(rc) (return code of the refit) and r(cmdline) (command executed).
 program define _atest_refit, rclass
     version 17
@@ -15,8 +18,33 @@ program define _atest_refit, rclass
     if inlist("`e(cmd2)'", "stcox", "streg") local oldcmd `e(cmd2)'
     local newcmd = cond("`newcmd'" == "", "`oldcmd'", "`newcmd'")
 
-    * ---- split e(cmdline) at top level (parentheses depth 0)
     local s = strtrim(`"`e(cmdline)'"')
+    if `"`s'"' == "" {
+        * ---- rebuild the command line from the stored results
+        tempname bb
+        matrix `bb' = e(b)
+        local cn : colnames `bb'
+        local ce : coleq `bb'
+        local eq1 : word 1 of `ce'
+        local xs ""
+        local hascons 0
+        forvalues j = 1/`= colsof(`bb')' {
+            local t : word `j' of `cn'
+            local q : word `j' of `ce'
+            if "`q'" != "`eq1'" continue
+            if "`t'" == "_cons" {
+                local hascons 1
+                continue
+            }
+            local xs `xs' `t'
+        }
+        local s `"`oldcmd' `e(depvar)' `xs'"'
+        if "`e(wtype)'" != "" local s `"`s' [`e(wtype)' `e(wexp)']"'
+        local s `"`s' if $ATEST_esamp"'
+        if !`hascons' local s `"`s', noconstant"'
+    }
+
+    * ---- split the command line at top level (parentheses depth 0)
     local sp = strpos(`"`s'"', " ")
     local rest = strtrim(substr(`"`s'"', `sp' + 1, .))
     local n = strlen(`"`rest'"')
@@ -76,7 +104,7 @@ program define _atest_refit, rclass
     }
     else {
         foreach o of local remove {
-            if inlist("`o'", "robust", "time", "nohr", "noshow", "irr", "nolrtest") {
+            if inlist("`o'", "robust", "time", "nohr", "noshow", "irr", "nolrtest", "hc2", "hc3", "or") {
                 local opts = ustrregexra(`"`opts'"', "(^|\s)`o'(\s|$)", " ")
             }
             else {
